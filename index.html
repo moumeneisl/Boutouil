@@ -1,0 +1,291 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>دورة رياضية - بوطويل 2025</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #2193b0, #6dd5ed, #b2fefa);
+      font-family: 'Tahoma', sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #fff;
+    }
+    header {
+      background: #006494;
+      padding: 10px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      background: rgba(0,0,0,0.3);
+    }
+    nav button {
+      flex: 1;
+      padding: 10px;
+      font-size: 18px;
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+    }
+    nav button.active {
+      background: #0582ca;
+    }
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      background: rgba(0,0,0,0.4);
+      padding: 20px;
+      border-radius: 10px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 5px;
+    }
+    button.submit {
+      width: 100%;
+      padding: 12px;
+      background: #00c853;
+      border: none;
+      border-radius: 5px;
+      font-size: 18px;
+      color: white;
+      cursor: pointer;
+    }
+    button.submit:hover {
+      background: #00b342;
+    }
+    .message {
+      text-align: center;
+      margin: 10px 0;
+      font-size: 18px;
+      color: #00e676;
+    }
+    .table-wrapper {
+      max-height: 400px;
+      overflow-y: auto;
+      margin-top: 10px;
+      border-radius: 5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(255,255,255,0.1);
+    }
+    th, td {
+      padding: 8px;
+      border: 1px solid #ccc;
+      text-align: center;
+      color: #fff;
+    }
+    th {
+      background: #0582ca;
+      position: sticky;
+      top: 0;
+    }
+    .hidden {
+      display: none;
+    }
+    .delete-btn, .delete-row-btn {
+      padding: 5px 10px;
+      background: #d50000;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+    }
+    .delete-btn:hover, .delete-row-btn:hover {
+      background: #b71c1c;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: #006494;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 300px;
+      text-align: center;
+    }
+    .modal-content input {
+      width: 90%;
+      padding: 8px;
+      margin: 10px 0;
+    }
+    .modal-content button {
+      margin: 5px;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .confirm {
+      background: #00c853;
+      color: #fff;
+    }
+    .cancel {
+      background: #d50000;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+<header>دورة رياضية - بوطويل 2025</header>
+<nav>
+  <button id="tab-register" class="active" onclick="showTab('register')">التسجيل</button>
+  <button id="tab-list" onclick="showTab('list')">قائمة المسجلين</button>
+</nav>
+<div class="container">
+  <div id="register-section">
+    <input type="text" id="firstName" placeholder="الاسم" />
+    <input type="text" id="lastName" placeholder="اللقب" />
+    <input type="number" id="age" placeholder="السن" />
+    <button class="submit" onclick="register()">تسجيل</button>
+    <div class="message" id="message"></div>
+  </div>
+  <div id="list-section" class="hidden">
+    <div class="table-wrapper">
+      <table id="playersTable">
+        <thead>
+          <tr>
+            <th>الترتيب</th>
+            <th>الاسم</th>
+            <th>اللقب</th>
+            <th>السن</th>
+            <th>تاريخ التسجيل</th>
+            <th>حذف</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <button class="delete-btn" onclick="openModal('all')">حذف جميع البيانات</button>
+  </div>
+</div>
+<div class="modal" id="passModal">
+  <div class="modal-content">
+    <p>أدخل رمز المرور</p>
+    <input type="password" id="passInput" placeholder="رمز المرور">
+    <br>
+    <button class="confirm" onclick="confirmModal()">تأكيد</button>
+    <button class="cancel" onclick="closeModal()">إلغاء</button>
+  </div>
+</div>
+<script>
+let deleteTarget = null;
+function showTab(tab) {
+  document.getElementById('register-section').classList.add('hidden');
+  document.getElementById('list-section').classList.add('hidden');
+  document.getElementById('tab-register').classList.remove('active');
+  document.getElementById('tab-list').classList.remove('active');
+  if (tab === 'register') {
+    document.getElementById('register-section').classList.remove('hidden');
+    document.getElementById('tab-register').classList.add('active');
+  } else {
+    document.getElementById('list-section').classList.remove('hidden');
+    document.getElementById('tab-list').classList.add('active');
+    loadPlayers();
+  }
+}
+function register() {
+  const firstName = document.getElementById('firstName').value.trim();
+  const lastName = document.getElementById('lastName').value.trim();
+  const age = parseInt(document.getElementById('age').value.trim(), 10);
+  const message = document.getElementById('message');
+  const players = JSON.parse(localStorage.getItem('players') || '[]');
+  if (!firstName || !lastName || isNaN(age)) {
+    message.style.color = 'red';
+    message.textContent = 'يرجى تعبئة جميع الحقول بشكل صحيح';
+    return;
+  }
+  if (age >= 19) {
+    message.style.color = 'red';
+    message.textContent = 'يجب أن يكون السن أقل من 19 سنة';
+    return;
+  }
+  const isDuplicate = players.some(p => p.firstName === firstName && p.lastName === lastName);
+  if (isDuplicate) {
+    message.style.color = 'red';
+    message.textContent = 'هذا الشخص مسجل بالفعل';
+    return;
+  }
+  message.style.color = '#00e676';
+  message.textContent = 'انتظر جاري تسجيلك...⌛️';
+  setTimeout(() => {
+    players.push({
+      firstName,
+      lastName,
+      age,
+      date: new Date().toLocaleString('en-US')
+    });
+    localStorage.setItem('players', JSON.stringify(players));
+    message.textContent = 'تم تسجيلك بنجاح✅️';
+    document.getElementById('firstName').value = '';
+    document.getElementById('lastName').value = '';
+    document.getElementById('age').value = '';
+  }, 3000);
+}
+function loadPlayers() {
+  const players = JSON.parse(localStorage.getItem('players') || '[]');
+  const tbody = document.querySelector('#playersTable tbody');
+  tbody.innerHTML = '';
+  players.forEach((p, i) => {
+    const row = tbody.insertRow();
+    row.insertCell(0).textContent = i + 1;
+    row.insertCell(1).textContent = p.firstName;
+    row.insertCell(2).textContent = p.lastName;
+    row.insertCell(3).textContent = p.age;
+    row.insertCell(4).textContent = p.date;
+    const delCell = row.insertCell(5);
+    const btn = document.createElement('button');
+    btn.textContent = 'حذف';
+    btn.className = 'delete-row-btn';
+    btn.onclick = () => openModal(i);
+    delCell.appendChild(btn);
+  });
+}
+function openModal(target) {
+  deleteTarget = target;
+  document.getElementById('passModal').style.display = 'flex';
+  document.getElementById('passInput').value = '';
+}
+function closeModal() {
+  document.getElementById('passModal').style.display = 'none';
+}
+function confirmModal() {
+  const pass = document.getElementById('passInput').value;
+  if (pass !== '1234') {
+    alert('كلمة مرور غير صحيحة');
+    return;
+  }
+  if (deleteTarget === 'all') {
+    localStorage.removeItem('players');
+    loadPlayers();
+    alert('تم حذف جميع البيانات بنجاح');
+  } else {
+    const players = JSON.parse(localStorage.getItem('players') || '[]');
+    players.splice(deleteTarget, 1);
+    localStorage.setItem('players', JSON.stringify(players));
+    loadPlayers();
+    alert('تم حذف المسجل بنجاح');
+  }
+  closeModal();
+}
+</script>
+</body>
+</html>
